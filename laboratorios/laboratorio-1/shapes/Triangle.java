@@ -9,7 +9,7 @@ import java.awt.*;
 
 public class Triangle{
     
-    public static int VERTICES=3;
+    public static final int VERTICES=3;
     
     private int height;
     private int width;
@@ -29,7 +29,44 @@ public class Triangle{
         color = "green";
         isVisible = false;
     }
+    
+    public Triangle(String color, int width, int height){
+        this.color = color;
+        this.width = width;
+        this.height = height;
+    }
+    
+    public int area(){
+        return (height * width)/2;
+    }
 
+    public void equilateral(){
+        int areaActual = area();
+        double nuevoWidth = Math.sqrt(4 * areaActual/ Math.sqrt(3));
+        double nuevoHeight = (nuevoWidth * Math.sqrt(3))/ 2; 
+        
+        erase();
+        
+        width = (int) Math.round(nuevoWidth);
+        height = (int) Math.round(nuevoHeight);
+        
+        draw();
+    }
+    
+    public void walk(int times){
+        if(times == 0){
+            System.out.println("Sin movimiento");
+        }else{
+            for(int i = 0; i < Math.abs(times); i++){
+                if(times > 0){
+                  moveRight();  
+                }else{
+                    moveLeft();
+                }
+            }
+        }
+    }
+    
     /**
      * Make this triangle visible. If it was already visible, do nothing.
      */
