@@ -9,6 +9,10 @@ import java.awt.*;
 
 public class Triangle{
     
+    /**
+     * Número de vértices que tiene un triángulo. Es una constante común
+     * a todas las instancias de la clase.
+     */
     public static final int VERTICES=3;
     
     private int height;
@@ -30,16 +34,42 @@ public class Triangle{
         isVisible = false;
     }
     
+    /**
+     * Crea un nuevo triángulo con el color, ancho y alto indicados,
+     * ubicado en la posición por defecto.
+     *
+     * @param color color inicial del triángulo
+     * @param width ancho inicial en píxeles
+     * @param height alto inicial en píxeles
+     */
     public Triangle(String color, int width, int height){
         this.color = color;
         this.width = width;
         this.height = height;
     }
     
+    /**
+     * Calcula el perímetro actual del triángulo, asumiendo que es isósceles
+     * @return el perímetro del triángulo en píxeles
+     */
+    public double perimeter(){
+        double lado = Math.sqrt(Math.pow(width / 2.0, 2) + Math.pow(height, 2));
+        return width + 2 * lado;
+}
+    
+    /**
+     * Calcula el área actual del triángulo, a partir de su alto y ancho.
+     *
+     * @return el área del triángulo en píxeles cuadrados
+     */
     public int area(){
         return (height * width)/2;
     }
 
+    /**
+     * Convierte el triángulo en uno equilátero, conservando de forma
+     * aproximada la misma área que tenía antes de la conversión.
+     */
     public void equilateral(){
         int areaActual = area();
         double nuevoWidth = Math.sqrt(4 * areaActual/ Math.sqrt(3));
@@ -53,6 +83,13 @@ public class Triangle{
         draw();
     }
     
+    /**
+     * Mueve el triángulo horizontalmente, un paso de 20 píxeles a la vez,
+     * la cantidad de veces indicada. Un valor positivo lo mueve hacia la
+     * derecha, un valor negativo lo mueve hacia la izquierda.
+     *
+     * @param times número de pasos a mover (puede ser negativo)
+     */
     public void walk(int times){
         if(times == 0){
             System.out.println("Sin movimiento");
