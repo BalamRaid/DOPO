@@ -1,5 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.awt.Shape;
+import java.awt.geom.AffineTransform;
 
 public class SlotMachine {
     private List<Wheel> wheels;
@@ -7,6 +9,7 @@ public class SlotMachine {
     private boolean lastOk;
     private List<Symbol> symbols;
     private java.util.Random random;
+    private Canvas canvas;
 
     /**
      * Creates a slot machine with no wheels, invisible by default.
@@ -27,6 +30,7 @@ public class SlotMachine {
         int clamped = clamp(pos, 1, wheels.size() + 1);
         wheels.add(clamped - 1, new Wheel());
         lastOk = true;
+        refresh();
     }
 
     /**
@@ -39,8 +43,12 @@ public class SlotMachine {
             return;
         }
         int clamped = clamp(pos, 1, wheels.size());
-        wheels.remove(clamped - 1);
+        Wheel removed = wheels.remove(clamped - 1);
+        if (visible && canvas != null) {
+            canvas.erase(removed);
+        }
         lastOk = true;
+        refresh();
     }
 
     public void addSymbol(int pos, String color) {
@@ -57,6 +65,7 @@ public class SlotMachine {
             }
         }
         lastOk = true;
+        refresh();
     }
 
     public void delSymbol(String color) {
@@ -70,6 +79,7 @@ public class SlotMachine {
             w.adjustForRemoval(index, symbols.size());
         }
         lastOk = true;
+        refresh();
     }
     
     /**
@@ -91,6 +101,7 @@ public class SlotMachine {
         int clamped = clamp(wheel, 1, wheels.size());
         wheels.get(clamped - 1).setVisibleIndex(index);
         lastOk = true;
+        refresh();
     }
 
     /**
@@ -106,6 +117,7 @@ public class SlotMachine {
         int steps = random.nextInt(symbols.size()) + 1;
         wheels.get(clamped - 1).rotate(steps, symbols.size());
         lastOk = true;
+        refresh();
     }
 
     /**
@@ -120,6 +132,7 @@ public class SlotMachine {
             w.rotate(random.nextInt(symbols.size()) + 1, symbols.size());
         }
         lastOk = true;
+        refresh();
     }
     
     private boolean colorExists(String color) {
@@ -211,15 +224,39 @@ public class SlotMachine {
     }
 
     public void makeVisible() {
+        canvas = Canvas.getCanvas();
         visible = true;
         lastOk = true;
+        refresh();
     }
 
     public void makeInvisible() {
+        if (canvas != null) {
+            for (Wheel w : wheels) {
+                canvas.erase(w);
+            }
+            canvas.setVisible(false);
+        }
         visible = false;
         lastOk = true;
     }
 
+    private void refresh() {
+        if (!visible || canvas == null) return;
+        canvas.resize(Math.max(120, wheels.size() * 70 + 20), 200);
+        for (Wheel w : wheels) {
+            String color = visibleColorOf(w);
+            if (color == null) {
+                canvas.erase(w);
+                continue;
+            }
+            Shape shape = SymbolShapeCatalog.shapeFor(color);
+            int index = wheels.indexOf(w);
+            AffineTransform t = AffineTransform.getTranslateInstance(60 + index * 70, 100);
+            canvas.draw(w, color, t.createTransformedShape(shape));
+        }
+    }
+    
     public void exit() {
         if (visible) {
             makeInvisible();
