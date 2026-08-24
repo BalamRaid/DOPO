@@ -39,7 +39,7 @@ public class SlotMachine {
      */
     public void delWheel(int pos) {
         if (wheels.isEmpty()) {
-            lastOk = false;
+            fail("No hay ruedas para eliminar.");
             return;
         }
         int clamped = clamp(pos, 1, wheels.size());
@@ -52,8 +52,12 @@ public class SlotMachine {
     }
 
     public void addSymbol(int pos, String color) {
-        if (!CssColors.isValid(color) || colorExists(color)) {
-            lastOk = false;
+        if (!CssColors.isValid(color)) {
+            fail("'" + color + "' no es un color CSS válido.");
+            return;
+        }
+        if (colorExists(color)) {
+            fail("Ya existe un símbolo con el color '" + color + "'.");
             return;
         }
         int previousSize = symbols.size();
@@ -71,7 +75,7 @@ public class SlotMachine {
     public void delSymbol(String color) {
         int index = indexOfColor(color);
         if (index == -1) {
-            lastOk = false;
+            fail("No existe un símbolo con el color '" + color + "'.");
             return;
         }
         symbols.remove(index);
@@ -90,12 +94,12 @@ public class SlotMachine {
      */
     public void placeSymbol(int wheel, String symbol) {
         if (wheels.isEmpty()) {
-            lastOk = false;
+            fail("No hay ruedas.");
             return;
         }
         int index = indexOfColor(symbol);
         if (index == -1) {
-            lastOk = false;
+            fail("No existe el símbolo '" + symbol + "'.");
             return;
         }
         int clamped = clamp(wheel, 1, wheels.size());
@@ -110,7 +114,7 @@ public class SlotMachine {
      */
     public void spin(int wheel) {
         if (wheels.isEmpty() || symbols.isEmpty()) {
-            lastOk = false;
+            fail("No se puede girar: faltan ruedas o símbolos.");
             return;
         }
         int clamped = clamp(wheel, 1, wheels.size());
@@ -125,7 +129,7 @@ public class SlotMachine {
      */
     public void spin() {
         if (wheels.isEmpty() || symbols.isEmpty()) {
-            lastOk = false;
+            fail("No se puede girar: faltan ruedas o símbolos.");
             return;
         }
         for (Wheel w : wheels) {
@@ -243,7 +247,16 @@ public class SlotMachine {
 
     private void refresh() {
         if (!visible || canvas == null) return;
-        canvas.resize(Math.max(120, wheels.size() * 70 + 20), 200);
+        int width = Math.max(120, wheels.size() * 70 + 20);
+        canvas.resize(width, 200);
+
+        if (isJackpot()) {
+            canvas.draw("jackpotGlow", "gold",
+                new java.awt.geom.Rectangle2D.Double(5, 5, width - 10, 190));
+        } else {
+            canvas.erase("jackpotGlow");
+        }
+
         for (Wheel w : wheels) {
             String color = visibleColorOf(w);
             if (color == null) {
@@ -267,4 +280,16 @@ public class SlotMachine {
     public boolean ok() {
         return lastOk;
     }
+    
+    /**
+     * Marks the last operation as failed and, if the machine is visible,
+     * shows the error to the user via a JOptionPane.
+     */
+    private void fail(String message) {
+        lastOk = false;
+        if (visible) {
+            javax.swing.JOptionPane.showMessageDialog(null, message);
+        }
+    }
+    
 }
