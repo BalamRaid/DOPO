@@ -3,10 +3,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Utility class holding the full set of CSS standard color names and
- * their RGB values. Used both to validate symbol colors and to resolve
- * them to a real java.awt.Color for drawing.
- */
+* Clase de utilidad que contiene el conjunto completo de nombres de colores
+* CSS estándar y sus valores RGB. Se utiliza tanto para validar los colores
+* de los símbolos como para convertirlos en un objeto {@link java.awt.Color}
+* para su representación gráfica.
+*/
 public class CssColors {
     private static final Map<String, Integer> NAMED_COLORS = new HashMap<>();
 

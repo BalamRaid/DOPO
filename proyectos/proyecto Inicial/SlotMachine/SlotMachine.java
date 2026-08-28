@@ -1,3 +1,28 @@
+/**
+
+Simula una máquina tragamonedas con un número configurable de ruedas y
+símbolos, inspirada en el Problema I ("Slot Machine") de las Finales
+Mundiales de ICPC 2025.
+Una SlotMachine contiene una única secuencia compartida de símbolos
+(identificados mediante nombres de colores CSS estándar) utilizada por
+todas las ruedas. Cada rueda no posee sus propios símbolos, sino que
+únicamente recuerda qué posición de esa secuencia compartida está
+mostrando actualmente. Las ruedas y los símbolos pueden añadirse o
+eliminarse dinámicamente, las ruedas pueden girarse aleatoriamente o
+configurarse directamente para mostrar un símbolo específico, y la
+máquina puede indicar si todas las ruedas muestran actualmente el mismo
+símbolo (premio mayor).
+La máquina puede funcionar en modo visible, dibujándose a sí misma y a
+sus símbolos sobre un {@link Canvas}, o en modo invisible, en el cual
+toda la lógica continúa funcionando, pero no se realiza ningún dibujo
+ni se muestran cuadros de diálogo de error. El resultado de la última
+operación realizada sobre la máquina puede consultarse en cualquier
+momento mediante {@link #ok()}, sin depender de excepciones.
+
+
+@version 1.0 (Ciclo 1)
+*/
+
 import java.util.ArrayList;
 import java.util.List;
 import java.awt.Shape;
@@ -23,9 +48,9 @@ public class SlotMachine {
     }
 
     /**
-     * Adds a new empty wheel at the given position (1-based).
-     * If pos is out of range, it is clamped to the nearest valid position.
-     */
+    * Añade una nueva rueda vacía en la posición indicada (basada en 1).
+    * Si la posición está fuera de rango, se ajusta a la posición válida más cercana.
+    */
     public void addWheel(int pos) {
         int clamped = clamp(pos, 1, wheels.size() + 1);
         wheels.add(clamped - 1, new Wheel());
@@ -34,9 +59,10 @@ public class SlotMachine {
     }
 
     /**
-     * Removes the wheel at the given position (1-based).
-     * Fails (ok() == false) if there are no wheels to remove.
-     */
+    * Elimina la rueda de la posición indicada (basada en 1).
+    * La operación falla (ok() == false) si no hay ruedas para eliminar.
+    */
+
     public void delWheel(int pos) {
         if (wheels.isEmpty()) {
             fail("No hay ruedas para eliminar.");
@@ -51,6 +77,12 @@ public class SlotMachine {
         refresh();
     }
 
+    /**
+    * Añade un nuevo símbolo del color indicado en la posición especificada (basada en 1).
+    * Si la posición está fuera de rango, se ajusta a la posición válida más cercana.
+    * La operación falla si el color no es un color CSS válido o si ya existe
+    * un símbolo con ese color.
+    */
     public void addSymbol(int pos, String color) {
         if (!CssColors.isValid(color)) {
             fail("'" + color + "' no es un color CSS válido.");
@@ -72,6 +104,11 @@ public class SlotMachine {
         refresh();
     }
 
+    /**
+    * Elimina el símbolo que tiene el color indicado.
+    * La operación falla si no existe un símbolo con ese color.
+    */
+
     public void delSymbol(String color) {
         int index = indexOfColor(color);
         if (index == -1) {
@@ -87,11 +124,11 @@ public class SlotMachine {
     }
     
     /**
-     * Sets the wheel at the given position (1-based, clamped) to show the
-     * given symbol color directly, without spinning.
-     * Fails (ok() == false) if there are no wheels or the color does not
-     * exist in the shared symbol sequence.
-     */
+    * Establece la rueda en la posición indicada (basada en 1 y ajustada al rango válido)
+    * para que muestre directamente el símbolo del color indicado, sin girar.
+    * La operación falla (ok() == false) si no hay ruedas o si el color no existe
+    * en la secuencia compartida de símbolos.
+    */
     public void placeSymbol(int wheel, String symbol) {
         if (wheels.isEmpty()) {
             fail("No hay ruedas.");
@@ -109,9 +146,9 @@ public class SlotMachine {
     }
 
     /**
-     * Spins the wheel at the given position (1-based, clamped) to a random
-     * symbol from the shared symbol sequence.
-     */
+    * Gira la rueda en la posición indicada (basada en 1 y ajustada al rango válido)
+    * hasta un símbolo aleatorio de la secuencia compartida de símbolos.
+    */
     public void spin(int wheel) {
         if (wheels.isEmpty() || symbols.isEmpty()) {
             fail("No se puede girar: faltan ruedas o símbolos.");
@@ -125,8 +162,8 @@ public class SlotMachine {
     }
 
     /**
-     * Spins every wheel independently to a random symbol.
-     */
+    * Gira cada rueda de forma independiente hasta un símbolo aleatorio.
+    */
     public void spin() {
         if (wheels.isEmpty() || symbols.isEmpty()) {
             fail("No se puede girar: faltan ruedas o símbolos.");
@@ -139,10 +176,22 @@ public class SlotMachine {
         refresh();
     }
     
+    /**
+    * Comprueba si existe un símbolo con el color indicado.
+    *
+    * @param color color que se desea comprobar.
+    * @return true si existe un símbolo con ese color; false en caso contrario.
+    */
     private boolean colorExists(String color) {
         return indexOfColor(color) != -1;
     }
-
+    
+    /**
+    * Busca el índice del símbolo que tiene el color indicado.
+    *
+    * @param color color del símbolo que se desea buscar.
+    * @return el índice del símbolo si existe; -1 si no se encuentra.
+    */
     private int indexOfColor(String color) {
         for (int i = 0; i < symbols.size(); i++) {
             if (symbols.get(i).getColor().equals(color)) {
@@ -153,9 +202,9 @@ public class SlotMachine {
     }
     
     /**
-     * Returns the colors of all symbols in the shared sequence, in order,
-     * starting from position 1.
-     */
+    * Devuelve los colores de todos los símbolos de la secuencia compartida,
+    * en orden, comenzando desde la posición 1.
+    */
     public String[] symbols() {
         String[] result = new String[symbols.size()];
         for (int i = 0; i < symbols.size(); i++) {
@@ -165,9 +214,9 @@ public class SlotMachine {
     }
     
     /**
-     * Returns the number of distinct colors currently visible across all
-     * wheels. Wheels with no visible symbol (null) are not counted.
-     */
+    * Devuelve el número de colores distintos que están actualmente visibles en todas
+    * las ruedas. Las ruedas que no tienen ningún símbolo visible (null) no se cuentan.
+    */
     public int distinctSymbols() {
         String[] config = configuration();
         java.util.Set<String> distinct = new java.util.HashSet<>();
@@ -180,9 +229,9 @@ public class SlotMachine {
     }
 
     /**
-     * Returns true if the machine has at least one wheel and every wheel
-     * is showing the same non-null symbol.
-     */
+    * Devuelve true si la máquina tiene al menos una rueda y todas las ruedas
+    * muestran el mismo símbolo que no es null.
+    */
     public boolean isJackpot() {
         String[] config = configuration();
         if (config.length == 0) {
@@ -201,8 +250,8 @@ public class SlotMachine {
     }
     
     /**
-     * Returns the colors currently visible on each wheel, left to right.
-     */
+    * Devuelve los colores actualmente visibles en cada rueda, de izquierda a derecha.
+    */
     public String[] configuration() {
         String[] result = new String[wheels.size()];
         for (int i = 0; i < wheels.size(); i++) {
@@ -211,6 +260,12 @@ public class SlotMachine {
         return result;
     }
 
+    /**
+    * Obtiene el color actualmente visible en la rueda indicada.
+    *
+    * @param wheel rueda de la que se desea obtener el color visible.
+    * @return el color visible de la rueda; null si no hay símbolos.
+    */
     private String visibleColorOf(Wheel wheel) {
         if (symbols.isEmpty()) {
             return null;
@@ -219,8 +274,8 @@ public class SlotMachine {
     }
     
     /**
-     * Clamps a 1-based position between min and max.
-     */
+    * Ajusta una posición basada en 1 para que se encuentre entre el valor mínimo y máximo.
+    */
     private int clamp(int pos, int min, int max) {
         if (pos < min) return min;
         if (pos > max) return max;
@@ -245,6 +300,13 @@ public class SlotMachine {
         lastOk = true;
     }
 
+    /**
+
+    * Actualiza la representación visual de la máquina en el lienzo.
+    * Ajusta el tamaño del lienzo según el número de ruedas y muestra el efecto
+    * visual de premio mayor cuando todas las ruedas muestran el mismo símbolo.
+    * También dibuja o elimina los símbolos visibles de cada rueda.
+    */
     private void refresh() {
         if (!visible || canvas == null) return;
         int width = Math.max(120, wheels.size() * 70 + 20);
@@ -282,9 +344,9 @@ public class SlotMachine {
     }
     
     /**
-     * Marks the last operation as failed and, if the machine is visible,
-     * shows the error to the user via a JOptionPane.
-     */
+    * Marca la última operación como fallida y, si la máquina es visible,
+    * muestra el error al usuario mediante un JOptionPane.
+    */
     private void fail(String message) {
         lastOk = false;
         if (visible) {

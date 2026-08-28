@@ -2,10 +2,11 @@ import java.awt.Shape;
 import java.awt.geom.*;
 
 /**
- * Maps symbol colors to a hand-designed Shape when a curated design
- * exists, falling back to a generic circle for any other valid CSS
- * color. Pure geometry only — knows nothing about Canvas or drawing.
- */
+* Asocia los colores de los símbolos con una figura (Shape) diseñada manualmente
+* cuando existe un diseño específico, utilizando un círculo genérico para cualquier
+* otro color CSS válido. Utiliza únicamente geometría y no tiene conocimiento sobre
+* Canvas ni sobre el proceso de dibujo.
+*/
 public class SymbolShapeCatalog {
 
     /**
@@ -24,10 +25,18 @@ public class SymbolShapeCatalog {
         }
     }
 
+    /**
+    Crea una figura cuadrada de 30x30 unidades.
+    @return una figura cuadrada.
+    */
     private static Shape square() {
         return new Rectangle2D.Double(-15, -15, 30, 30);
     }
 
+    /**
+    Crea una figura circular de 30x30 unidades.
+    @return una figura circular.
+    */
     private static Shape circle() {
         return new Ellipse2D.Double(-15, -15, 30, 30);
     }
@@ -61,9 +70,10 @@ public class SymbolShapeCatalog {
     }
 
     /**
-     * A single petal shape pointing "up" from the origin, used as the
-     * building block for lotus symbols.
-     */
+    * Representa la figura de un solo pétalo orientado hacia arriba desde el origen,
+    * utilizada como elemento base para construir los símbolos de loto.
+    */
+
     private static Path2D petal(double length, double width) {
         Path2D p = new Path2D.Double();
         p.moveTo(0, 0);
@@ -74,10 +84,12 @@ public class SymbolShapeCatalog {
     }
 
     /**
-     * Builds a stylized lotus by repeating one petal, rotated evenly
-     * around the center. "count" petals is a simplification — used for
-     * both the 2-petal and the (stylized) "thousand-petal" lotus.
-     */
+    * Construye una flor de loto estilizada repitiendo un pétalo, girado
+    * uniformemente alrededor del centro. La cantidad de pétalos es una
+    * simplificación, utilizada tanto para el loto de 2 pétalos como para
+    * el loto estilizado de "mil pétalos".
+    */
+
     private static Shape lotus(int count, double length, double width) {
         Path2D combined = new Path2D.Double();
         Path2D basePetal = petal(length, width);
