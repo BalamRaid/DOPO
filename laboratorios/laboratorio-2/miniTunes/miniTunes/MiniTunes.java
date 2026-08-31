@@ -88,6 +88,23 @@ public class MiniTunes{
     //The operator characters are:  'u' union, 'i' intersection, 'd' difference
     //Songs preserve their original order in the resulting playlist.
     public void assignBinary(String a, String b, char op, String c){
+        if (!playlists.containsKey(a) || !playlists.containsKey(b) || !playlists.containsKey(c)) {
+            ok = false;
+            return;
+        }
+        Playlist left = playlists.get(b);
+        Playlist right = playlists.get(c);
+        Playlist result;
+        switch (op) {
+            case 'u': result = left.union(right); break;
+            case 'i': result = left.intersect(right); break;
+            case 'd': result = left.difference(right); break;
+            default:
+                ok = false;
+                return;
+        }
+        playlists.put(a, result);
+        ok = true;
     }
   
    

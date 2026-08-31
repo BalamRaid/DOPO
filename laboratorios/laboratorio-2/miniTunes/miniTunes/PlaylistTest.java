@@ -123,6 +123,46 @@ public class PlaylistTest{
         assertEquals(2, result.size());
     }
     
+    @Test
+    public void shouldUnionTwoPlaylistsAvoidingDuplicates() {
+        Playlist p1 = new Playlist(new String[][]{
+            {"One", "U2", "Rock", "4", "*****"},
+            {"Numb", "Linkin Park", "Rock", "3", null}});
+        Playlist p2 = new Playlist(new String[][]{
+            {"Numb", "Linkin Park", "Rock", "3", null},
+            {"Dreams", "Fleetwood Mac", "Folk", "4", "****"}});
+        assertEquals(3, p1.union(p2).size());
+    }
+
+    @Test
+    public void shouldIntersectTwoPlaylists() {
+        Playlist p1 = new Playlist(new String[][]{
+            {"One", "U2", "Rock", "4", "*****"},
+            {"Numb", "Linkin Park", "Rock", "3", null}});
+        Playlist p2 = new Playlist(new String[][]{
+            {"Numb", "Linkin Park", "Rock", "3", null}});
+        assertEquals(1, p1.intersect(p2).size());
+    }
+
+    @Test
+    public void shouldReturnDifferenceBetweenTwoPlaylists() {
+        Playlist p1 = new Playlist(new String[][]{
+            {"One", "U2", "Rock", "4", "*****"},
+            {"Numb", "Linkin Park", "Rock", "3", null}});
+        Playlist p2 = new Playlist(new String[][]{
+            {"Numb", "Linkin Park", "Rock", "3", null}});
+        assertEquals(1, p1.difference(p2).size());
+    }
+
+    @Test
+    public void shouldNotModifyOperandsWhenComputingUnion() {
+        Playlist p1 = new Playlist(new String[][]{{"One", "U2", "Rock", "4", "*****"}});
+        Playlist p2 = new Playlist(new String[][]{{"Numb", "Linkin Park", "Rock", "3", null}});
+        p1.union(p2);
+        assertEquals(1, p1.size());
+        assertEquals(1, p2.size());
+    }
+    
     /**
      * Tears down the test fixture.
      *

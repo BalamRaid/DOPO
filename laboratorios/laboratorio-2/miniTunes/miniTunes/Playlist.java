@@ -162,4 +162,34 @@ public class Playlist {
         return songs.hashCode();
     }
     
+    public Playlist union(Playlist other) {
+        List<Song> combined = new ArrayList<>(songs);
+        for (Song s : other.songs) {
+            if (!containsEntry(combined, s)) {
+                combined.add(s);
+            }
+        }
+        return new Playlist(combined);
+    }
+
+    public Playlist intersect(Playlist other) {
+        List<Song> result = new ArrayList<>();
+        for (Song s : songs) {
+            if (containsEntry(other.songs, s)) {
+                result.add(s);
+            }
+        }
+        return new Playlist(result);
+    }
+
+    public Playlist difference(Playlist other) {
+        List<Song> result = new ArrayList<>();
+        for (Song s : songs) {
+            if (!containsEntry(other.songs, s)) {
+                result.add(s);
+            }
+        }
+        return new Playlist(result);
+    }
+    
 }

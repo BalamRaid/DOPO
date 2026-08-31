@@ -131,4 +131,54 @@ public class MiniTunesTest {
         assertEquals(0, mt.size("A"));
     }
     
+    @Test
+    public void shouldUnionThroughBinaryOperation() {
+        mt.define("A"); mt.define("B"); mt.define("C");
+        mt.assign("B", new String[][]{{"One", "U2", "Rock", "4", "*****"}});
+        mt.assign("C", new String[][]{{"Numb", "Linkin Park", "Rock", "3", null}});
+        mt.assignBinary("A", "B", 'u', "C");
+        assertTrue(mt.ok());
+        assertEquals(2, mt.size("A"));
+    }
+
+    @Test
+    public void shouldIntersectThroughBinaryOperation() {
+        mt.define("A"); mt.define("B"); mt.define("C");
+        mt.assign("B", new String[][]{
+            {"One", "U2", "Rock", "4", "*****"},
+            {"Numb", "Linkin Park", "Rock", "3", null}});
+        mt.assign("C", new String[][]{{"Numb", "Linkin Park", "Rock", "3", null}});
+        mt.assignBinary("A", "B", 'i', "C");
+        assertTrue(mt.ok());
+        assertEquals(1, mt.size("A"));
+    }
+
+    @Test
+    public void shouldComputeDifferenceThroughBinaryOperation() {
+        mt.define("A"); mt.define("B"); mt.define("C");
+        mt.assign("B", new String[][]{
+            {"One", "U2", "Rock", "4", "*****"},
+            {"Numb", "Linkin Park", "Rock", "3", null}});
+        mt.assign("C", new String[][]{{"Numb", "Linkin Park", "Rock", "3", null}});
+        mt.assignBinary("A", "B", 'd', "C");
+        assertTrue(mt.ok());
+        assertEquals(1, mt.size("A"));
+    }
+
+    @Test
+    public void shouldFailBinaryOperationWhenAnOperandIsUndefined() {
+        mt.define("A"); mt.define("B");
+        mt.assignBinary("A", "B", 'u', "C");
+        assertFalse(mt.ok());
+        assertEquals(0, mt.size("A"));
+    }
+
+    @Test
+    public void shouldFailBinaryOperationWhenOperatorCharIsInvalid() {
+        mt.define("A"); mt.define("B"); mt.define("C");
+        mt.assignBinary("A", "B", 'x', "C");
+        assertFalse(mt.ok());
+        assertEquals(0, mt.size("A"));
+    }
+    
 }
