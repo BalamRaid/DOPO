@@ -35,6 +35,7 @@ public class SlotMachine {
     private List<Symbol> symbols;
     private java.util.Random random;
     private Canvas canvas;
+    private static final int SPIN_STEP_DELAY_MS = 220;
 
     /**
      * Creates a slot machine with no wheels, invisible by default.
@@ -150,13 +151,14 @@ public class SlotMachine {
     * hasta un símbolo aleatorio de la secuencia compartida de símbolos.
     */
     public void spin(int wheel) {
-        if (wheels.isEmpty() || symbols.isEmpty()) {
-            fail("No se puede girar: faltan ruedas o símbolos.");
+        if (symbols.isEmpty()) {
+            fail("No se puede girar: no hay símbolos cargados.");
             return;
         }
-        int clamped = clamp(wheel, 1, wheels.size());
+        Wheel target = spinnableWheelAt(wheel);
+        if (target == null) return;  // fail() ya se llamó adentro de spinnableWheelAt
         int steps = random.nextInt(symbols.size()) + 1;
-        wheels.get(clamped - 1).rotate(steps, symbols.size());
+        animatedRotate(target, steps);
         lastOk = true;
         refresh();
     }
@@ -165,12 +167,24 @@ public class SlotMachine {
     * Gira cada rueda de forma independiente hasta un símbolo aleatorio.
     */
     public void spin() {
-        if (wheels.isEmpty() || symbols.isEmpty()) {
-            fail("No se puede girar: faltan ruedas o símbolos.");
+        if (wheels.isEmpty()) {
+            fail("No hay ruedas para girar.");
             return;
         }
+        if (symbols.isEmpty()) {
+            fail("No se puede girar: no hay símbolos cargados.");
+            return;
+        }
+        boolean anySpun = false;
         for (Wheel w : wheels) {
-            w.rotate(random.nextInt(symbols.size()) + 1, symbols.size());
+            if (!w.isLocked()) {
+                w.rotate(random.nextInt(symbols.size()) + 1, symbols.size());
+                anySpun = true;
+            }
+        }
+        if (!anySpun) {
+            fail("Todas las ruedas están fijas; no hay nada que girar.");
+            return;
         }
         lastOk = true;
         refresh();
@@ -352,6 +366,156 @@ public class SlotMachine {
         if (visible) {
             javax.swing.JOptionPane.showMessageDialog(null, message);
         }
+    }
+    
+    /**
+     * Locks the wheel at the given position (1-based, clamped), preventing
+     * it from being spun until unlocked.
+     */
+    public void lock(int wheel) {
+        if (wheels.isEmpty()) {
+            fail("No hay ruedas para fijar.");
+            return;
+        }
+        int clamped = clamp(wheel, 1, wheels.size());
+        wheels.get(clamped - 1).setLocked(true);
+        lastOk = true;
+        refresh();
+    }
+    
+    /**
+     * Unlocks the wheel at the given position (1-based, clamped), allowing
+     * it to be spun again.
+     */
+    public void unlock(int wheel) {
+        if (wheels.isEmpty()) {
+            fail("No hay ruedas para soltar.");
+            return;
+        }
+        int clamped = clamp(wheel, 1, wheels.size());
+        wheels.get(clamped - 1).setLocked(false);
+        lastOk = true;
+        refresh();
+    }
+    
+    public void swap(int wheel1, int wheel2) {
+        if (wheels.isEmpty()) {
+            fail("No hay ruedas para intercambiar.");
+            return;
+        }
+        int c1 = clamp(wheel1, 1, wheels.size());
+        int c2 = clamp(wheel2, 1, wheels.size());
+        java.util.Collections.swap(wheels, c1 - 1, c2 - 1);
+        lastOk = true;
+        refresh();
+    }
+    
+    /**
+     * Returns the wheel at the given position (1-based, clamped) if it
+     * exists and is not locked; otherwise calls fail() and returns null.
+     */
+    private Wheel spinnableWheelAt(int pos) {
+        if (wheels.isEmpty()) {
+            fail("No hay ruedas para girar.");
+            return null;
+        }
+        int clamped = clamp(pos, 1, wheels.size());
+        Wheel target = wheels.get(clamped - 1);
+        if (target.isLocked()) {
+            fail("La rueda " + clamped + " está fija; suéltela antes de girar.");
+            return null;
+        }
+        return target;
+    }
+    
+    /**
+     * Rotates the wheel at the given position (1-based, clamped) by an
+     * exact number of steps, deterministically (no randomness). Negative
+     * steps rotate in the opposite direction.
+     */
+    public void spin(int wheel, int steps) {
+        if (symbols.isEmpty()) {
+            fail("No se puede girar: no hay símbolos cargados.");
+            return;
+        }
+        Wheel target = spinnableWheelAt(wheel);
+        if (target == null) return;
+        animatedRotate(target, steps);
+        lastOk = true;
+        refresh();
+    }
+    
+    /**
+     * Deja la máquina directamente en una configuración dada, sin girar.
+     * El arreglo debe contener exactamente un color por cada rueda, en el
+     * mismo orden de izquierda a derecha que retorna {@link #configuration()}.
+     * <p>
+     * Las ruedas fijas (locked) se saltan y conservan el símbolo que ya
+     * estaban mostrando, sin importar lo que pida la posición correspondiente
+     * del arreglo.
+     * <p>
+     * Esta operación es todo o nada: cada color del arreglo se valida antes
+     * de tocar cualquier rueda, así que si algún color no existe en la lista
+     * de símbolos de la máquina, o el tamaño del arreglo no coincide con el
+     * número de ruedas, la máquina queda completamente sin cambios y
+     * {@link #ok()} retorna false.
+     *
+     * @param setSymbols el color deseado para cada rueda, de izquierda a derecha
+     */
+    public void spin(String[] setSymbols) {
+        if (wheels.isEmpty()) {
+            fail("No hay ruedas para configurar.");
+            return;
+        }
+        if (setSymbols == null || setSymbols.length != wheels.size()) {
+            fail("El arreglo debe tener exactamente " + wheels.size() + " colores.");
+            return;
+        }
+
+        int[] indices = new int[setSymbols.length];
+        for (int i = 0; i < setSymbols.length; i++) {
+            int idx = indexOfColor(setSymbols[i]);
+            if (idx == -1) {
+                fail("El color '" + setSymbols[i] + "' no existe en la máquina.");
+                return;
+            }
+            indices[i] = idx;
+        }
+
+        boolean anySet = false;
+        for (int i = 0; i < wheels.size(); i++) {
+            Wheel w = wheels.get(i);
+            if (!w.isLocked()) {
+                w.setVisibleIndex(indices[i]);
+                anySet = true;
+            }
+        }
+        if (!anySet) {
+            fail("Todas las ruedas están fijas; no se aplicó ninguna configuración.");
+            return;
+        }
+        lastOk = true;
+        refresh();
+    }
+    
+    /**
+     * Rotates the given wheel one step at a time until it has moved the
+     * requested number of steps (negative rotates in the opposite
+     * direction), refreshing the display after each step. If the machine
+     * is visible, pauses briefly between steps so the movement can be seen;
+     * if invisible, each step is instantaneous with no delay.
+     */
+    private void animatedRotate(Wheel target, int steps) {
+        int direction = Integer.signum(steps);
+        int magnitude = Math.abs(steps);
+        for (int i = 0; i < magnitude; i++) {
+            target.rotate(direction, symbols.size());
+            refresh();
+            if (visible) {
+                canvas.wait(SPIN_STEP_DELAY_MS);
+            }
+        }
+        refresh();
     }
     
 }

@@ -6,15 +6,25 @@
  */
 public class Wheel {
     private int visibleIndex; // 0-based index into SlotMachine's symbol list
-
+    private boolean locked;
+    
     public Wheel() {
         visibleIndex = 0;
+        locked = false;
     }
 
     public int getVisibleIndex() {
         return visibleIndex;
     }
 
+    public boolean isLocked() {
+        return locked;
+    }
+    
+    public void setLocked(boolean locked) {
+        this.locked = locked;
+    }
+    
     /**
      * Moves the window by the given number of steps, wrapping around
      * the shared symbol list (size totalSymbols).
