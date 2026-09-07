@@ -1,8 +1,9 @@
 /**
- * Represents a single wheel of the slot machine. A wheel does not own its
- * symbols — the full symbol sequence lives in SlotMachine and is shared
- * by every wheel. A Wheel only remembers which index of that shared
- * sequence it is currently showing through its window.
+ * Representa una única rueda de la máquina tragamonedas. Una rueda no
+ * posee sus propios símbolos: la secuencia completa vive en SlotMachine
+ * y es compartida por todas las ruedas. Una Wheel únicamente recuerda
+ * qué índice de esa secuencia compartida está mostrando actualmente a
+ * través de su ventana.
  */
 public class Wheel {
     private int visibleIndex; // 0-based index into SlotMachine's symbol list
@@ -26,8 +27,9 @@ public class Wheel {
     }
     
     /**
-     * Moves the window by the given number of steps, wrapping around
-     * the shared symbol list (size totalSymbols).
+     * Desplaza la ventana visible el número de pasos indicado, dando la
+     * vuelta (wrap around) sobre la lista compartida de símbolos (de
+     * tamaño totalSymbols).
      */
     public void rotate(int steps, int totalSymbols) {
         if (totalSymbols == 0) return;
@@ -35,17 +37,18 @@ public class Wheel {
     }
 
     /**
-     * Directly sets which index of the shared symbol list is visible
-     * (used by placeSymbol).
+     * Establece directamente qué índice de la lista compartida de símbolos
+     * está visible (usado por placeSymbol).
      */
     public void setVisibleIndex(int index) {
         visibleIndex = index;
     }
     
     /**
-     * Adjusts this wheel's visible index after a symbol was inserted
-     * at insertedAt in the shared list, so this wheel keeps showing
-     * the same symbol it was showing before the insertion.
+     * Ajusta el índice visible de esta rueda después de que se insertó un
+     * símbolo en la posición insertedAt de la lista compartida, de modo que
+     * la rueda siga mostrando el mismo símbolo que mostraba antes de la
+     * inserción.
      */
     public void adjustForInsertion(int insertedAt) {
         if (insertedAt <= visibleIndex) {
@@ -54,10 +57,10 @@ public class Wheel {
     }
 
     /**
-     * Adjusts this wheel's visible index after the symbol at removedAt
-     * was deleted from the shared list (now of size newTotal). If this
-     * wheel was showing the removed symbol, it lands on the next
-     * available one (wrapping if necessary).
+     * Ajusta el índice visible de esta rueda después de que se eliminó el
+     * símbolo en la posición removedAt de la lista compartida (ahora de
+     * tamaño newTotal). Si esta rueda mostraba el símbolo eliminado, pasa
+     * al siguiente símbolo disponible (dando la vuelta si es necesario).
      */
     public void adjustForRemoval(int removedAt, int newTotal) {
         if (newTotal == 0) {

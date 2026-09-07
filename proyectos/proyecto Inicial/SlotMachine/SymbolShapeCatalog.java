@@ -10,7 +10,8 @@ import java.awt.geom.*;
 public class SymbolShapeCatalog {
 
     /**
-     * Returns the Shape associated with the given color, centered at (0,0).
+     * Devuelve la figura (Shape) asociada al color indicado, centrada en
+     * (0,0).
      */
     public static Shape shapeFor(String color) {
         switch (color) {
@@ -21,6 +22,7 @@ public class SymbolShapeCatalog {
             case "blue":   return circle();
             case "pink":   return lotus(2, 20, 9);
             case "violet": return lotus(12, 16, 5);
+            case "lime": return flowerB();
             default:       return circle();
         }
     }
@@ -100,4 +102,40 @@ public class SymbolShapeCatalog {
         }
         return combined;
     }
+    
+    /**
+     * Una sola hoja dentada y puntiaguda que apunta hacia "arriba" desde el
+     * origen, utilizada como pieza base para construir el símbolo de hoja
+     * usado en flowerB().
+     */
+    private static Shape leafBlade(double length, double width) {
+        Path2D p = new Path2D.Double();
+        p.moveTo(0, 0);
+        p.lineTo(-width * 0.5, -length * 0.30);
+        p.lineTo(-width * 0.25, -length * 0.35);
+        p.lineTo(-width * 0.40, -length * 0.55);
+        p.lineTo(-width * 0.15, -length * 0.60);
+        p.lineTo(-width * 0.25, -length * 0.80);
+        p.lineTo(0, -length);
+        p.lineTo(width * 0.25, -length * 0.80);
+        p.lineTo(width * 0.15, -length * 0.60);
+        p.lineTo(width * 0.40, -length * 0.55);
+        p.lineTo(width * 0.25, -length * 0.35);
+        p.lineTo(width * 0.5, -length * 0.30);
+        p.closePath();
+        return p;
+    }
+
+    private static Shape flowerB() {
+        double[] angles = {-80, -55, -30, 0, 30, 55, 80};
+        double[] lengths = {20, 24, 27, 29, 27, 24, 20};
+        Path2D combined = new Path2D.Double();
+        for (int i = 0; i < angles.length; i++) {
+            Shape blade = leafBlade(lengths[i], 6);
+            AffineTransform t = AffineTransform.getRotateInstance(Math.toRadians(angles[i]));
+            combined.append(t.createTransformedShape(blade), false);
+        }
+        return combined;
+    }
+    
 }

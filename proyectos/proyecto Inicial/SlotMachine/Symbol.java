@@ -1,6 +1,6 @@
 /**
- * Represents a single symbol identified by a CSS standard color name.
- * Immutable: once created, its color does not change.
+ * Representa un único símbolo identificado por el nombre de un color
+ * CSS estándar. Es inmutable: una vez creado, su color no cambia.
  */
 public class Symbol {
     private String color;

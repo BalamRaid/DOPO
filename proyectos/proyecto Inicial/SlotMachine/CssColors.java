@@ -167,9 +167,9 @@ public class CssColors {
     }
 
     /**
-     * Resolves a CSS color name to its java.awt.Color. Returns black
-     * if the name is not recognized (should not happen if isValid was
-     * checked first).
+     * Resuelve un nombre de color CSS a su java.awt.Color correspondiente.
+     * Devuelve negro si el nombre no es reconocido (no debería ocurrir si
+     * ya se comprobó con isValid).
      */
     public static Color toColor(String name) {
         Integer rgb = NAMED_COLORS.get(name);

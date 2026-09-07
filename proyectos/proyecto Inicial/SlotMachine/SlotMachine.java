@@ -1,27 +1,27 @@
 /**
-
-Simula una máquina tragamonedas con un número configurable de ruedas y
-símbolos, inspirada en el Problema I ("Slot Machine") de las Finales
-Mundiales de ICPC 2025.
-Una SlotMachine contiene una única secuencia compartida de símbolos
-(identificados mediante nombres de colores CSS estándar) utilizada por
-todas las ruedas. Cada rueda no posee sus propios símbolos, sino que
-únicamente recuerda qué posición de esa secuencia compartida está
-mostrando actualmente. Las ruedas y los símbolos pueden añadirse o
-eliminarse dinámicamente, las ruedas pueden girarse aleatoriamente o
-configurarse directamente para mostrar un símbolo específico, y la
-máquina puede indicar si todas las ruedas muestran actualmente el mismo
-símbolo (premio mayor).
-La máquina puede funcionar en modo visible, dibujándose a sí misma y a
-sus símbolos sobre un {@link Canvas}, o en modo invisible, en el cual
-toda la lógica continúa funcionando, pero no se realiza ningún dibujo
-ni se muestran cuadros de diálogo de error. El resultado de la última
-operación realizada sobre la máquina puede consultarse en cualquier
-momento mediante {@link #ok()}, sin depender de excepciones.
-
-
-@version 1.0 (Ciclo 1)
-*/
+ * Simula una máquina tragamonedas con un número configurable de ruedas y
+ * símbolos, inspirada en el Problema I ("Slot Machine") de las Finales
+ * Mundiales de ICPC 2025.
+ * Una SlotMachine contiene una única secuencia compartida de símbolos
+ * (identificados mediante nombres de colores CSS estándar) utilizada por
+ * todas las ruedas. Cada rueda no posee sus propios símbolos, sino que
+ * únicamente recuerda qué posición de esa secuencia compartida está
+ * mostrando actualmente. Las ruedas y los símbolos pueden añadirse o
+ * eliminarse dinámicamente, las ruedas pueden girarse aleatoriamente,
+ * girarse un número exacto de posiciones, fijarse (lock) para impedir que
+ * giren, intercambiarse de posición entre sí, o configurarse directamente
+ * —de forma individual o en bloque— para mostrar un símbolo específico. La
+ * máquina puede indicar si todas las ruedas muestran actualmente el mismo
+ * símbolo (premio mayor).
+ * La máquina puede funcionar en modo visible, dibujándose a sí misma y a
+ * sus símbolos sobre un {@link Canvas}, o en modo invisible, en el cual
+ * toda la lógica continúa funcionando, pero no se realiza ningún dibujo
+ * ni se muestran cuadros de diálogo de error. El resultado de la última
+ * operación realizada sobre la máquina puede consultarse en cualquier
+ * momento mediante {@link #ok()}, sin depender de excepciones.
+ *
+ * @version 2.0 (Ciclo 2)
+ */
 
 import java.util.ArrayList;
 import java.util.List;
@@ -147,9 +147,11 @@ public class SlotMachine {
     }
 
     /**
-    * Gira la rueda en la posición indicada (basada en 1 y ajustada al rango válido)
-    * hasta un símbolo aleatorio de la secuencia compartida de símbolos.
-    */
+     * Gira la rueda en la posición indicada (basada en 1 y ajustada al rango
+     * válido) hasta un símbolo aleatorio de la secuencia compartida de
+     * símbolos. Falla si no hay símbolos cargados o si la rueda está fija
+     * (locked).
+     */
     public void spin(int wheel) {
         if (symbols.isEmpty()) {
             fail("No se puede girar: no hay símbolos cargados.");
@@ -164,8 +166,11 @@ public class SlotMachine {
     }
 
     /**
-    * Gira cada rueda de forma independiente hasta un símbolo aleatorio.
-    */
+     * Gira cada rueda de forma independiente hasta un símbolo aleatorio. Las
+     * ruedas fijas (locked) se omiten y conservan su símbolo actual. Falla
+     * si no hay ruedas, si no hay símbolos cargados, o si todas las ruedas
+     * están fijas.
+     */
     public void spin() {
         if (wheels.isEmpty()) {
             fail("No hay ruedas para girar.");
@@ -175,17 +180,19 @@ public class SlotMachine {
             fail("No se puede girar: no hay símbolos cargados.");
             return;
         }
-        boolean anySpun = false;
+        java.util.List<Wheel> spinning = new java.util.ArrayList<>();
+        java.util.List<Integer> steps = new java.util.ArrayList<>();
         for (Wheel w : wheels) {
             if (!w.isLocked()) {
-                w.rotate(random.nextInt(symbols.size()) + 1, symbols.size());
-                anySpun = true;
+                spinning.add(w);
+                steps.add(random.nextInt(symbols.size()) + 1);
             }
         }
-        if (!anySpun) {
+        if (spinning.isEmpty()) {
             fail("Todas las ruedas están fijas; no hay nada que girar.");
             return;
         }
+        animatedMultiRotate(spinning, steps);
         lastOk = true;
         refresh();
     }
@@ -296,6 +303,10 @@ public class SlotMachine {
         return pos;
     }
 
+    /**
+     * Hace visible la máquina, creando (si aún no existe) el {@link Canvas}
+     * compartido y dibujando en él el estado actual de la máquina.
+     */
     public void makeVisible() {
         canvas = Canvas.getCanvas();
         visible = true;
@@ -303,6 +314,10 @@ public class SlotMachine {
         refresh();
     }
 
+    /**
+     * Oculta la máquina, eliminando del lienzo las ruedas dibujadas antes
+     * de ocultar la ventana del {@link Canvas}.
+     */
     public void makeInvisible() {
         if (canvas != null) {
             for (Wheel w : wheels) {
@@ -346,6 +361,10 @@ public class SlotMachine {
         }
     }
     
+    /**
+     * Cierra la máquina: si está visible, la oculta primero. La operación
+     * siempre queda registrada como exitosa.
+     */
     public void exit() {
         if (visible) {
             makeInvisible();
@@ -353,6 +372,11 @@ public class SlotMachine {
         lastOk = true;
     }
     
+    /**
+     * Indica si la última operación realizada sobre la máquina fue exitosa.
+     *
+     * @return true si la última operación tuvo éxito; false si falló.
+     */
     public boolean ok() {
         return lastOk;
     }
@@ -369,8 +393,9 @@ public class SlotMachine {
     }
     
     /**
-     * Locks the wheel at the given position (1-based, clamped), preventing
-     * it from being spun until unlocked.
+     * Fija (lock) la rueda en la posición indicada (basada en 1 y ajustada
+     * al rango válido), impidiendo que sea girada hasta liberarse con
+     * {@link #unlock(int)}. Falla si no hay ruedas.
      */
     public void lock(int wheel) {
         if (wheels.isEmpty()) {
@@ -384,8 +409,9 @@ public class SlotMachine {
     }
     
     /**
-     * Unlocks the wheel at the given position (1-based, clamped), allowing
-     * it to be spun again.
+     * Libera (unlock) la rueda en la posición indicada (basada en 1 y
+     * ajustada al rango válido), permitiendo que vuelva a girarse. Falla si
+     * no hay ruedas.
      */
     public void unlock(int wheel) {
         if (wheels.isEmpty()) {
@@ -398,6 +424,12 @@ public class SlotMachine {
         refresh();
     }
     
+    /**
+     * Intercambia los símbolos visibles entre las dos ruedas indicadas
+     * (posiciones basadas en 1 y ajustadas al rango válido). Falla si no hay
+     * ruedas, o si alguna de las dos ruedas está fija (locked); en ese caso
+     * ninguna de las dos cambia.
+     */
     public void swap(int wheel1, int wheel2) {
         if (wheels.isEmpty()) {
             fail("No hay ruedas para intercambiar.");
@@ -405,14 +437,19 @@ public class SlotMachine {
         }
         int c1 = clamp(wheel1, 1, wheels.size());
         int c2 = clamp(wheel2, 1, wheels.size());
+        if (wheels.get(c1 - 1).isLocked() || wheels.get(c2 - 1).isLocked()) {
+            fail("No se puede intercambiar: una de las ruedas está fija.");
+            return;
+        }
         java.util.Collections.swap(wheels, c1 - 1, c2 - 1);
         lastOk = true;
         refresh();
     }
     
     /**
-     * Returns the wheel at the given position (1-based, clamped) if it
-     * exists and is not locked; otherwise calls fail() and returns null.
+     * Devuelve la rueda en la posición indicada (basada en 1 y ajustada al
+     * rango válido) si existe y no está fija; en caso contrario invoca
+     * fail() y retorna null.
      */
     private Wheel spinnableWheelAt(int pos) {
         if (wheels.isEmpty()) {
@@ -429,9 +466,11 @@ public class SlotMachine {
     }
     
     /**
-     * Rotates the wheel at the given position (1-based, clamped) by an
-     * exact number of steps, deterministically (no randomness). Negative
-     * steps rotate in the opposite direction.
+     * Gira la rueda en la posición indicada (basada en 1 y ajustada al
+     * rango válido) exactamente el número de pasos indicado, de forma
+     * determinística (sin aleatoriedad). Un número de pasos negativo gira
+     * en sentido contrario. Falla si no hay símbolos o si la rueda está
+     * fija.
      */
     public void spin(int wheel, int steps) {
         if (symbols.isEmpty()) {
@@ -482,40 +521,71 @@ public class SlotMachine {
             indices[i] = idx;
         }
 
-        boolean anySet = false;
+        java.util.List<Wheel> unlocked = new java.util.ArrayList<>();
+        for (Wheel w : wheels) {
+            if (!w.isLocked()) unlocked.add(w);
+        }
+        if (unlocked.isEmpty()) {
+            fail("Todas las ruedas están fijas; no se aplicó ninguna configuración.");
+            return;
+        }
+
+        java.util.List<Wheel> spinning = new java.util.ArrayList<>();
+        java.util.List<Integer> steps = new java.util.ArrayList<>();
         for (int i = 0; i < wheels.size(); i++) {
             Wheel w = wheels.get(i);
             if (!w.isLocked()) {
-                w.setVisibleIndex(indices[i]);
-                anySet = true;
+                int stepsNeeded = Math.floorMod(indices[i] - w.getVisibleIndex(), symbols.size());
+                if (stepsNeeded > 0) {
+                    spinning.add(w);
+                    steps.add(stepsNeeded);
+                }
             }
         }
-        if (!anySet) {
-            fail("Todas las ruedas están fijas; no se aplicó ninguna configuración.");
-            return;
+        if (!spinning.isEmpty()) {
+            animatedMultiRotate(spinning, steps);
         }
         lastOk = true;
         refresh();
     }
     
     /**
-     * Rotates the given wheel one step at a time until it has moved the
-     * requested number of steps (negative rotates in the opposite
-     * direction), refreshing the display after each step. If the machine
-     * is visible, pauses briefly between steps so the movement can be seen;
-     * if invisible, each step is instantaneous with no delay.
+     * Gira la rueda indicada un paso a la vez hasta completar el número de
+     * pasos solicitado (un valor negativo gira en sentido contrario). Es un
+     * caso particular de {@link #animatedMultiRotate} para una sola rueda.
      */
     private void animatedRotate(Wheel target, int steps) {
-        int direction = Integer.signum(steps);
-        int magnitude = Math.abs(steps);
-        for (int i = 0; i < magnitude; i++) {
-            target.rotate(direction, symbols.size());
+        animatedMultiRotate(java.util.List.of(target), java.util.List.of(steps));
+    }
+    
+    /**
+     * Gira simultáneamente varias ruedas, cada una su propia cantidad de
+     * pasos con signo (que indica la dirección), avanzando de a un paso por
+     * rueda y refrescando el dibujo después de cada paso hasta que todas
+     * completen su recorrido. Si la máquina es visible, hace una breve
+     * pausa entre pasos para que el movimiento pueda apreciarse; si es
+     * invisible, cada paso ocurre sin demora.
+     */
+    private void animatedMultiRotate(java.util.List<Wheel> targets, java.util.List<Integer> stepsList) {
+        int maxMagnitude = 0;
+        int[] directions = new int[targets.size()];
+        int[] magnitudes = new int[targets.size()];
+        for (int i = 0; i < targets.size(); i++) {
+            directions[i] = Integer.signum(stepsList.get(i));
+            magnitudes[i] = Math.abs(stepsList.get(i));
+            maxMagnitude = Math.max(maxMagnitude, magnitudes[i]);
+        }
+        for (int step = 0; step < maxMagnitude; step++) {
+            for (int i = 0; i < targets.size(); i++) {
+                if (magnitudes[i] > step) {
+                    targets.get(i).rotate(directions[i], symbols.size());
+                }
+            }
             refresh();
             if (visible) {
                 canvas.wait(SPIN_STEP_DELAY_MS);
             }
         }
-        refresh();
     }
     
 }
