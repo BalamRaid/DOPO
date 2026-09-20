@@ -174,6 +174,20 @@ public class MiniTunes{
         return ok;
     }
     
+    /*
+     * poder cambiar el nomre de las playlist
+     */
+    
+    public void rename(String oldName, String newName) {
+        if (!playlists.containsKey(oldName) || playlists.containsKey(newName)) {
+            ok = false;
+            return;
+        }
+        Playlist p1 = playlists.remove(oldName);
+        playlists.put(newName, p1);
+        ok = true;
+    }
+    
 }
     
 

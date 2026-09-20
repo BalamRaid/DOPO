@@ -175,4 +175,24 @@ public class CssColors {
         Integer rgb = NAMED_COLORS.get(name);
         return rgb == null ? Color.black : new Color(rgb);
     }
+    
+    /**
+     * Devuelve n nombres de colores CSS distintos, elegidos al azar y en
+     * orden aleatorio, usando el generador de números aleatorios indicado.
+     *
+     * @param n cantidad de colores distintos a devolver
+     * @param random generador de números aleatorios a utilizar
+     * @return una lista con n nombres de colores CSS distintos
+     * @throws IllegalArgumentException si n es mayor que la cantidad de
+     * colores CSS disponibles
+     */
+    public static java.util.List<String> randomDistinctNames(int n, java.util.Random random) {
+        if (n > NAMED_COLORS.size()) {
+            throw new IllegalArgumentException("No hay " + n + " colores CSS disponibles.");
+        }
+        java.util.List<String> all = new java.util.ArrayList<>(NAMED_COLORS.keySet());
+        java.util.Collections.shuffle(all, random);
+        return new java.util.ArrayList<>(all.subList(0, n));
+    }
+    
 }

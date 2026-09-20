@@ -49,6 +49,47 @@ public class SlotMachine {
     }
 
     /**
+     * Crea una máquina tragamonedas de n ruedas y n símbolos, con colores
+     * CSS distintos elegidos al azar. Cada rueda se inicializa en una
+     * posición aleatoria de la secuencia de símbolos, garantizando que no
+     * todas empiecen mostrando el mismo símbolo (salvo que n sea 1, caso en
+     * el que es inevitable). La máquina nace invisible.
+     *
+     * @param n cantidad de ruedas y de símbolos que tendrá la máquina
+     */
+    public SlotMachine(int n) {
+        wheels = new ArrayList<>();
+        symbols = new ArrayList<>();
+        random = new java.util.Random();
+        visible = false;
+        lastOk = true;
+
+        for (String color : CssColors.randomDistinctNames(n, random)) {
+            symbols.add(new Symbol(color));
+        }
+        for (int i = 0; i < n; i++) {
+            Wheel w = new Wheel();
+            w.setVisibleIndex(random.nextInt(n));
+            wheels.add(w);
+        }
+        ensureNotAllEqual();
+    }
+
+    /**
+     * Si, por azar, todas las ruedas quedaron mostrando el mismo símbolo
+     * tras la inicialización aleatoria, mueve una rueda al azar a otra
+     * posición hasta que deje de ser el caso. No hace nada si hay menos de
+     * dos ruedas (con una sola rueda siempre habría "premio mayor").
+     */
+    private void ensureNotAllEqual() {
+        if (wheels.size() < 2) return;
+        while (isJackpot()) {
+            int idx = random.nextInt(wheels.size());
+            wheels.get(idx).setVisibleIndex(random.nextInt(symbols.size()));
+        }
+    }
+    
+    /**
     * Añade una nueva rueda vacía en la posición indicada (basada en 1).
     * Si la posición está fuera de rango, se ajusta a la posición válida más cercana.
     */
