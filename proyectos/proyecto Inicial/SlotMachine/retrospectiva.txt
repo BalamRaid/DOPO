@@ -1,0 +1,27 @@
+DOCUMENTO DE RETROSPECTIVA - PROYECTO SLOT MACHINE (CICLOS 1, 2 Y 3)
+Desarrollo Orientado por Objetos (DOPO)
+Autores: García - Quezada
+
+1. ESTADO DEL PROYECTO SEGÚN LOS MINI-CICLOS PLANIFICADOS
+- Ciclo 1 (Diseño base y estructura): Completado. Se establecieron las clases principales (SlotMachine, Wheel, Symbol, Canvas, CssColors) y las relaciones de composición y asociación.
+- Ciclo 2 (Refactoring y Extensión - Operaciones de ruedas): Completado. Se implementaron los requisitos de control y movimiento: bloqueo/soltura (lock/unlock), intercambio (swap), giro por pasos con animación y la configuración en bloque (spin con arreglo) validada en todo-o-nada.
+- Ciclo 3 (Resolución de la maratón ICPC): Completado. Se desarrolló el solver automático (SlotMachineContest) dividido en las tres fases lógicas, logrando resolver el problema respetando el límite máximo de 10.000 acciones.
+
+2. RETROSPECTIVA - CICLO 1
+- ¿Qué salió bien? Tuvimos una base sólida al usar los componentes de figuras preexistentes (shapes) y estructurar bien las clases iniciales.
+- ¿Qué fue difícil? Entender cómo conectar los gráficos de Canvas con la lógica de las ruedas sin romper las reglas de encapsulamiento.
+- ¿Qué aprendimos? La importancia de tener claras las relaciones estáticas (clases y atributos) antes de empezar a programar la lógica visual.
+
+3. RETROSPECTIVA - CICLO 2
+- ¿Qué salió bien? Las operaciones nuevas (como fijar ruedas o intercambiarlas) encajaron muy bien en la estructura que ya traíamos del ciclo 1 sin tener que rediseñar todo desde cero.
+- ¿Qué fue difícil? Manejar los índices compartidos cuando se insertaban o borraban símbolos, y lograr que la animación paso a paso se viera fluida en el Canvas.
+- ¿Qué aprendimos? Que un buen diseño inicial facilita mucho la extensibilidad cuando el profesor pide agregar nuevas funcionalidades que no estaban previstas.
+
+4. RETROSPECTIVA - CICLO 3
+- ¿Qué salió bien? El algoritmo de tres fases funcionó muy bien para encontrar el premio mayor (Jackpot) usando únicamente los métodos permitidos, y las pruebas unitarias pasaron todas en verde (25/25).
+- ¿Qué fue difícil? Diseñar la forma de probar el solver de manera automática sin romper la privacidad de los métodos internos de la máquina.
+- ¿Qué aprendimos? Aprendimos a pensar en algoritmos de búsqueda y optimización basados exclusivamente en la observación externa, simulando las restricciones reales de una competencia de programación.
+
+5. ACCIONES DE MEJORA GENERALES
+- Planificar mejor las pruebas automáticas desde el inicio de cada ciclo en lugar de agregarlas al final.
+- Mantener siempre sincronizada la rama de trabajo en Git para evitar dolores de cabeza con las versiones del código.

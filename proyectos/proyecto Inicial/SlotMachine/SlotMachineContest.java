@@ -29,6 +29,23 @@ public class SlotMachineContest {
     }
 
     /**
+     * Resuelve el problema de la maratón sobre una máquina ya construida,
+     * usándola como testing tool. Este overload existe para que las pruebas
+     * de unidad puedan inyectar su propia {@link SlotMachine}, ejecutar la
+     * estrategia y comprobar el resultado (jackpot) sin acceder a estado
+     * privado de la máquina.
+     *
+     * La máquina permanece invisible durante la ejecución.
+     *
+     * @param machine máquina sobre la que se ejecuta la estrategia
+     * @param n número de ruedas y símbolos de la máquina
+     * @return arreglo de acciones realizadas sobre la máquina
+     */
+    public static int[][] solve(SlotMachine machine, int n) {
+        return solveMachine(machine, n);
+    }
+
+    /**
      * Ejecuta visualmente la solución sobre una máquina.
      *
      * @param n número de ruedas y símbolos
