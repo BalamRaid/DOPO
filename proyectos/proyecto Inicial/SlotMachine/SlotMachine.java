@@ -25,8 +25,15 @@
  * veta {@code lock}, {@code swap} y {@code delWheel}. Los tipos se eligen con
  * {@link #addWheel(int, String)}; {@link #addWheel(int)} y
  * {@link #SlotMachine(int)} crean ruedas {@code normal} por compatibilidad.
+ * <p>
+ * Ciclo 4 M2: existen cuatro tipos de símbolos ({@code normal},
+ * {@code ephemeral}, {@code shy} y {@code giant} nuevo Req19).
+ * {@code ephemeral} encoge por giro hasta punto, {@code giant} crece hasta
+ * 2.0, {@code shy} alterna visible/fantasma al ser seleccionado. Se eligen con
+ * {@link #addSymbol(int, String, String)}; {@link #addSymbol(int, String)} y
+ * {@link #SlotMachine(int)} crean {@code normal}. La lógica de jackpot no cambia.
  *
- * @version 3.0 (Ciclo 4 M1)
+ * @version 4.0 (Ciclo 4 M2)
  */
 
 import java.util.ArrayList;
@@ -172,6 +179,17 @@ public class SlotMachine {
     }
 
     /**
+    * Construye la clave de la insignia de tipo de símbolo visible en una rueda.
+    * La insignia va ligada a la rueda (posición), no al símbolo compartido.
+    *
+    * @param w rueda de la que se desea la clave de insignia.
+    * @return clave única y estable para esa insignia.
+    */
+    private String symBadgeKey(Wheel w) {
+        return "symbadge-" + System.identityHashCode(w);
+    }
+
+    /**
     * Elimina la rueda de la posición indicada (basada en 1).
     * La operación falla (ok() == false) si no hay ruedas para eliminar
     * o si la rueda es de tipo {@code rebel} (no se deja eliminar).
@@ -193,13 +211,14 @@ public class SlotMachine {
         if (visible && canvas != null) {
             canvas.erase(removed);
             canvas.erase(markerKey(removed));
+            canvas.erase(symBadgeKey(removed));
         }
         lastOk = true;
         refresh();
     }
 
     /**
-    * Añade un nuevo símbolo del color indicado en la posición especificada (basada en 1).
+    * Añade un nuevo símbolo normal del color indicado en la posición especificada (basada en 1).
     * Si la posición está fuera de rango, se ajusta a la posición válida más cercana.
     * La operación falla si el color no es un color CSS válido o si ya existe
     * un símbolo con ese color.
@@ -208,6 +227,21 @@ public class SlotMachine {
     * @param color nombre de color CSS del nuevo símbolo.
     */
     public void addSymbol(int pos, String color) {
+        addSymbol(pos, color, "normal");
+    }
+
+    /**
+    * Añade un nuevo símbolo del tipo indicado en la posición especificada (basada en 1).
+    * Si la posición está fuera de rango, se ajusta a la posición válida más cercana.
+    * Tipos válidos: {@code normal}, {@code ephemeral}, {@code shy} y {@code giant}
+    * (insensible a mayúsculas y espacios). Falla si el color no es CSS válido,
+    * si ya existe ese color o si el tipo es desconocido.
+    *
+    * @param pos posición deseada (base 1); se ajusta al rango válido.
+    * @param color nombre de color CSS del nuevo símbolo.
+    * @param type tipo de símbolo a crear.
+    */
+    public void addSymbol(int pos, String color, String type) {
         if (!CssColors.isValid(color)) {
             fail("'" + color + "' no es un color CSS válido.");
             return;
@@ -216,9 +250,14 @@ public class SlotMachine {
             fail("Ya existe un símbolo con el color '" + color + "'.");
             return;
         }
+        Symbol created = createSymbolByType(color, type);
+        if (created == null) {
+            fail("Tipo de símbolo desconocido: '" + type + "'. Use normal, ephemeral, shy o giant.");
+            return;
+        }
         int previousSize = symbols.size();
         int clamped = clamp(pos, 1, symbols.size() + 1);
-        symbols.add(clamped - 1, new Symbol(color));
+        symbols.add(clamped - 1, created);
         if (previousSize > 0) {
             for (Wheel w : wheels) {
                 w.adjustForInsertion(clamped - 1);
@@ -226,6 +265,101 @@ public class SlotMachine {
         }
         lastOk = true;
         refresh();
+    }
+
+    /**
+    * Crea un símbolo del tipo indicado sin añadirlo a la máquina.
+    *
+    * @param color nombre de color CSS del símbolo.
+    * @param type tipo pedido; se normaliza a minúsculas y sin espacios.
+    * @return el símbolo creado; null si el tipo es nulo o desconocido.
+    */
+    private Symbol createSymbolByType(String color, String type) {
+        if (type == null) return null;
+        String t = type.trim().toLowerCase();
+        if (t.equals("normal")) return new Symbol(color);
+        if (t.equals("ephemeral")) return new EphemeralSymbol(color);
+        if (t.equals("shy")) return new ShySymbol(color);
+        if (t.equals("giant")) return new GiantSymbol(color);
+        return null;
+    }
+
+    /**
+    * Consulta el tipo del símbolo con el color indicado.
+    * Falla (ok() == false) si no existe y retorna null.
+    *
+    * @param color nombre de color CSS del símbolo.
+    * @return tipo ({@code normal}, {@code ephemeral}, {@code shy} o {@code giant}); null si no existe.
+    */
+    public String symbolType(String color) {
+        int idx = indexOfColor(color);
+        if (idx == -1) {
+            fail("No existe un símbolo con el color '" + color + "'.");
+            return null;
+        }
+        return symbols.get(idx).getType();
+    }
+
+    /**
+    * Consulta la escala visual actual del símbolo con el color indicado.
+    * Falla (ok() == false) si no existe y retorna 1.0.
+    *
+    * @param color nombre de color CSS del símbolo.
+    * @return escala actual (ephemeral 0.15-1.0, giant 1.0-2.0, resto 1.0).
+    */
+    public double symbolScale(String color) {
+        int idx = indexOfColor(color);
+        if (idx == -1) {
+            fail("No existe un símbolo con el color '" + color + "'.");
+            return 1.0;
+        }
+        return symbols.get(idx).getScale();
+    }
+
+    /**
+    * Consulta si el símbolo con el color indicado está visible (no fantasma).
+    * Falla (ok() == false) si no existe y retorna true.
+    *
+    * @param color nombre de color CSS del símbolo.
+    * @return true si visible; false si shy en estado fantasma.
+    */
+    public boolean isSymbolVisible(String color) {
+        int idx = indexOfColor(color);
+        if (idx == -1) {
+            fail("No existe un símbolo con el color '" + color + "'.");
+            return true;
+        }
+        return symbols.get(idx).isVisible();
+    }
+
+    /**
+    * Notifica un giro a todos los símbolos escalables (ephemeral/giant).
+    * Se invoca una vez por cada rueda movida en un giro.
+    *
+    * @param wheelsMoved cantidad de ruedas movidas en la operación.
+    */
+    private void notifySpun(int wheelsMoved) {
+        for (int k = 0; k < wheelsMoved; k++) {
+            for (Symbol s : symbols) {
+                s.onSpun();
+            }
+        }
+    }
+
+    /**
+    * Notifica selección a los símbolos recién visibles en las ruedas indicadas.
+    * Los shy alternan visible/fantasma. No cambia escalas.
+    *
+    * @param affected ruedas cuyo símbolo visible final debe notificarse.
+    */
+    private void notifySelected(java.util.List<Wheel> affected) {
+        if (symbols.isEmpty()) return;
+        for (Wheel w : affected) {
+            int vi = w.getVisibleIndex();
+            if (vi >= 0 && vi < symbols.size()) {
+                symbols.get(vi).onSelected();
+            }
+        }
     }
 
     /**
@@ -254,6 +388,8 @@ public class SlotMachine {
     * La operación falla (ok() == false) si no hay ruedas o si el color no existe
     * en la secuencia compartida de símbolos. No aplica la copia de lefty:
     * asigna el símbolo pedido para permitir un montaje determinista.
+    * Asignación directa: no cambia escalas, pero sí notifica selección
+    * (un shy alterna visible/fantasma).
     *
     * @param wheel posición de la rueda (base 1); se ajusta al rango válido.
     * @param symbol nombre de color CSS del símbolo a mostrar.
@@ -269,7 +405,9 @@ public class SlotMachine {
             return;
         }
         int clamped = clamp(wheel, 1, wheels.size());
-        wheels.get(clamped - 1).setVisibleIndex(index);
+        Wheel target = wheels.get(clamped - 1);
+        target.setVisibleIndex(index);
+        notifySelected(java.util.List.of(target));
         lastOk = true;
         refresh();
     }
@@ -460,8 +598,8 @@ public class SlotMachine {
     }
 
     /**
-     * Oculta la máquina, eliminando del lienzo las ruedas y sus marcadores de tipo
-     * dibujados antes de ocultar la ventana del {@link Canvas}.
+     * Oculta la máquina, eliminando del lienzo las ruedas, sus marcadores de tipo
+     * y sus insignias de símbolo antes de ocultar la ventana del {@link Canvas}.
      * La operación siempre queda registrada como exitosa.
      */
     public void makeInvisible() {
@@ -469,6 +607,7 @@ public class SlotMachine {
             for (Wheel w : wheels) {
                 canvas.erase(w);
                 canvas.erase(markerKey(w));
+                canvas.erase(symBadgeKey(w));
             }
             canvas.erase("jackpotGlow");
             canvas.setVisible(false);
@@ -481,8 +620,9 @@ public class SlotMachine {
     * Actualiza la representación visual de la máquina en el lienzo.
     * Ajusta el tamaño del lienzo según el número de ruedas y muestra el efecto
     * visual de premio mayor cuando todas las ruedas muestran el mismo símbolo.
-    * También dibuja o elimina los símbolos visibles de cada rueda y el marcador
-    * que distingue su tipo (lefty: elipse azul; rebel: cuadrado rojo).
+    * Dibuja cada símbolo con su escala (ephemeral pequeño, giant grande) y en
+    * gris fantasma si su shy está invisible. Además dibuja el marcador de tipo
+    * de rueda (arriba) y la insignia de tipo de símbolo (abajo).
     */
     private void refresh() {
         if (!visible || canvas == null) return;
@@ -499,16 +639,23 @@ public class SlotMachine {
         for (Wheel w : wheels) {
             String color = visibleColorOf(w);
             String mKey = markerKey(w);
-            if (color == null) {
+            String bKey = symBadgeKey(w);
+            if (color == null || symbols.isEmpty()) {
                 canvas.erase(w);
                 canvas.erase(mKey);
+                canvas.erase(bKey);
                 continue;
             }
+            int vi = w.getVisibleIndex();
+            Symbol sym = (vi >= 0 && vi < symbols.size()) ? symbols.get(vi) : null;
+            double scale = (sym == null) ? 1.0 : sym.getScale();
+            boolean symVisible = (sym == null) || sym.isVisible();
             Shape shape = SymbolShapeCatalog.shapeFor(color);
             int index = wheels.indexOf(w);
             int centerX = 60 + index * 70;
             int centerY = 100;
             AffineTransform t = AffineTransform.getTranslateInstance(centerX, centerY);
+            t.scale(scale, scale);
             Shape marker = w.getMarkerShape();
             String markerColor = w.getMarkerColor();
             if (marker != null && markerColor != null) {
@@ -518,7 +665,18 @@ public class SlotMachine {
             } else {
                 canvas.erase(mKey);
             }
-            canvas.draw(w, color, t.createTransformedShape(shape));
+            if (symVisible) {
+                canvas.draw(w, color, t.createTransformedShape(shape));
+            } else {
+                canvas.draw(w, "lightgray", t.createTransformedShape(shape));
+            }
+            if (sym != null && sym.getBadgeShape() != null && sym.getBadgeColor() != null) {
+                AffineTransform bt = AffineTransform.getTranslateInstance(
+                    centerX + sym.getBadgeDx(), centerY + sym.getBadgeDy());
+                canvas.draw(bKey, sym.getBadgeColor(), bt.createTransformedShape(sym.getBadgeShape()));
+            } else {
+                canvas.erase(bKey);
+            }
         }
     }
     
@@ -683,8 +841,8 @@ public class SlotMachine {
      * estaban mostrando, sin importar lo que pida la posición correspondiente
      * del arreglo.
      * <p>
-     * Asignación directa: no aplica la copia de {@code lefty} para permitir
-     * un montaje determinista de la máquina.
+     * Asignación directa: no aplica la copia de {@code lefty} ni cambia escalas;
+     * sí notifica selección (un shy alterna visible/fantasma).
      * <p>
      * Esta operación es todo o nada: cada color del arreglo se valida antes
      * de tocar cualquier rueda, así que si algún color no existe en la lista
@@ -723,12 +881,15 @@ public class SlotMachine {
             return;
         }
 
+        java.util.List<Wheel> affected = new java.util.ArrayList<>();
         for (int i = 0; i < wheels.size(); i++) {
             Wheel w = wheels.get(i);
             if (!w.isLocked()) {
                 w.setVisibleIndex(indices[i]);
+                affected.add(w);
             }
         }
+        notifySelected(affected);
         lastOk = true;
         refresh();
     }
@@ -753,9 +914,10 @@ public class SlotMachine {
      * completen su recorrido. Las ruedas {@code lefty} con vecina a la
      * izquierda copian su estado final (tras girar las normales, de izquierda
      * a derecha) en lugar de rotar; sin vecina giran normal. Copia cualquier
-     * vecina (normal, lefty o rebel). Si la máquina es visible, hace una breve
-     * pausa entre pasos para que el movimiento pueda apreciarse; si es
-     * invisible, cada paso ocurre sin demora.
+     * vecina (normal, lefty o rebel). Cada rueda movida dispara un giro en los
+     * símbolos escalables (ephemeral encoge, giant crece) y cada aterrizaje
+     * final notifica selección (shy alterna). Si la máquina es visible, hace
+     * una breve pausa entre pasos; si es invisible, sin demora.
      *
      * @param targets ruedas a girar, en cualquier orden.
      * @param stepsList pasos con signo para cada rueda, en el mismo orden que targets.
@@ -799,6 +961,14 @@ public class SlotMachine {
             if (idx > 0) {
                 lefty.setVisibleIndex(wheels.get(idx - 1).getVisibleIndex());
             }
+        }
+        int moved = lefties.size();
+        for (int m : magnitudes) {
+            if (m > 0) moved++;
+        }
+        if (moved > 0) {
+            notifySpun(moved);
+            notifySelected(targets);
         }
     }
     
