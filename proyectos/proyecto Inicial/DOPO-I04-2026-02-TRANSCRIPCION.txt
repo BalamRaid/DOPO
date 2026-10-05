@@ -1,0 +1,159 @@
+================================================================================
+TRANSCRIPCIÓN - GUÍA PLAN DE PROYECTO INICIAL 2026-2
+Documento fuente: !DOPO-I04-2026-02.pdf (Ciclo No. 4/4)
+Extraído el 2026-10-04 para lectura por otros agentes.
+================================================================================
+
+ESCUELA COLOMBIANA DE INGENIERÍA
+DESARROLLO ORIENTADO POR OBJETOS
+Ciclo No. 4/4 – Refactoring y Extensión
+
+El proyecto inicial tiene como propósito desarrollar una aplicación que permita
+simular una situación inspirada en el Problem I de la maratón de programación
+internacional 2025 Slot Machine. En este simulador los símbolos deben ser de
+colores diferentes.
+
+CUARTO CICLO
+--------------------------------------------------------------------------------
+Los requisitos para este ciclo de desarrollo están indicados a continuación.
+Siempre hay un requisito implícito: el de EXTENSIBILIDAD.
+
+MUY IMPORTANTE PLANIFICAR LOS MINI-CICLOS PARA ORIENTAR EL DESARROLLO.
+
+REQUISITOS FUNCIONALES
+El simulador debe permitir:
+
+16. Manejar diferentes tipos de ruedas y de símbolos.
+17. Ofrecer mínimo tres tipos de ruedas:
+    - normal (la que tenemos),
+    - lefty (si hay una rueda a su izquierda, al girar copia su estado),
+    - rebel (no se deja bloquear, ni intercambiar, ni eliminar).
+18. Ofrecer mínimo tres tipos de símbolos:
+    - normal (el que tenemos),
+    - ephemeral (en cada giro va decrementando su tamaño hasta quedar como un
+      punto),
+    - shy (alterna su estado de visible a invisible, cada vez que es
+      seleccionado en la rueda).
+19. Ofrecer un nuevo tipo de alguno de los elementos. (Propuesto por ustedes).
+
+REQUISITOS DE DISEÑO
+REQUISITOS DE USABILIDAD
+1. Los elementos de diferentes tipos deben poder distinguirse claramente
+   visualmente.
+
+REQUISITOS DE ENTREGA
+Los productos de esta entrega son:
+1. Diseño completo en la herramienta astah.
+2. Implementación siguiendo los estándares de codificación y documentación de
+   java.
+3. Casos de pruebas de unidad de su proyecto: SlotMachineC4Test.
+4. Mínimo dos casos de prueba de unidad compartidos en la clase
+   SlotMachineCC4Test.
+5. Dos pruebas de aceptación preparadas para la presentación.
+6. Documento de retrospectiva del proyecto. (Ver ciclo uno)
+   Es necesario incluir la retrospectiva de este ciclo y de los anteriores.
+DEFINIR EL ESTADO EN TERMINOS DE LOS MINI-CILOS PLANIFICADOS.
+
+Los productos los deben publicar en un repositorio Git y deben publicar en
+Moodle un archivo txt que contenga la dirección URL. El nombre del archivo .txt
+debe ser la concatenación de los primeros apellidos más la primera letra del
+segundo apellido de los autores, ordenados alfabéticamente.
+
+Publicar productos a revisión: Semana 10 - 3 octubre
+================================================================================
+
+
+================================================================================
+INFORMACIÓN ADICIONAL (contexto de los ciclos anteriores, extraída de los PDF
+!DOPO-I01-2026-02, !DOPO-I02-2026-02, !DOPO-I03-2026-02 y i-slotMachine.pdf)
+================================================================================
+
+PROPÓSITO DEL PROYECTO
+----------------------
+Aplicación que simula una slot machine inspirada en el Problem I del ICPC 2025
+("Slot Machine"). Los símbolos deben ser de colores diferentes.
+
+CICLO 1 (Semana 05)
+-------------------
+Requisitos funcionales:
+ 1. Crear una máquina tragamonedas
+ 2. Adicionar o eliminar una rueda
+ 3. Adicionar o eliminar un símbolo
+ 4. Girar las ruedas de la máquina
+ 5. Consultar los símbolos de la máquina
+ 6. Consultar si la configuración es la ganadora
+ 7. Hacer visible o invisible el simulador (debe funcionar en modo invisible)
+ 8. Terminar el simulador
+Diseño/usabilidad:
+ - Todos los elementos deben tener representación visual adecuada.
+ - Los símbolos deben tener colores diferentes.
+ - La máquina debe lucir diferente si llegó a un estado ganador.
+ - Si la acción no se puede realizar, mensaje especial al usuario, solo si el
+   simulador está visible.
+Construcción:
+ - Respetar las decisiones de diseño de la clase principal; se pueden diseñar
+   clases adicionales.
+ - Reutilizar los componentes del proyecto shapes (paquete shapes, extenderlo si
+   se requieren otras funcionalidades).
+ - Las clases se construyen en BlueJ; el proyecto se llama slotMachine.
+Entrega: astah (diagrama de clases con atributos/métodos públicos y privados,
+incluyendo solo el detalle de lo extendido de shapes; diagrama de secuencia de
+los métodos de la clase principal, parando en los componentes de shapes),
+código documentado, Git + txt de Moodle con la URL, retrospectiva.
+
+CICLO 2
+-------
+Requisitos funcionales:
+ 9. Intercambiar dos ruedas
+10. Fijar y soltar una rueda
+11. Rotar una rueda un número de pasos
+12. Dejar la máquina en una configuración dada
+Diseño/usabilidad:
+ - En spin(wheel,steps), si está visible, el movimiento se visualiza paso a paso.
+Entrega: astah completo, implementación a estándar, pruebas unitarias en
+SlotMachineC2Test (modo invisible; pensar en qué debería/qué no debería hacer),
+MÍNIMO dos casos compartidos en SlotMachineCC2Test (clase colectiva del wiki,
+nombres con iniciales de autores, ej: DcAvShould...), dos pruebas de aceptación,
+retrospectiva de este ciclo y anteriores, estado en términos de mini-ciclos,
+Git + txt de Moodle (nombre: primeros apellidos + inicial del segundo apellido,
+ordenados alfabéticamente). Revisión: Semana 06: 5 septiembre.
+
+CICLO 3
+-------
+"En esta entrega SÍ deben resolver el problema de la maratón."
+Requisitos funcionales:
+13. Crear una máquina con igual número de ruedas y símbolos
+14. Solucionar el problema de la maratón
+15. Simular la solución, si es posible
+Diseño:
+ - SlotMachine se usa para simular y como testing tool de la maratón; NO para
+   resolver el problema.
+ - Como testing tool solo se usan: SlotMachine(n), spin(wheel,steps) y
+   distinctSymbols().
+ - Como simulador solo se usan: makeVisible() y makeInvisible().
+ - SlotMachine permanece invisible en solve y visible en simulate.
+Entrega: astah completo, implementación a estándar, pruebas unitarias en
+SlotMachineContestTest, MÍNIMO dos casos compartidos en SlotMachineContestCTest,
+dos pruebas de aceptación, retrospectiva acumulada, mini-ciclos, Git + txt.
+Revisión: Semana 8 - 19 septiembre.
+
+ENUNCIADO DEL PROBLEMA (i-slotMachine.pdf)
+------------------------------------------
+Problem I — Slot Machine, 49th ICPC World Championship.
+Time limit: 2 seconds.
+El jugador no ve los símbolos; un amigo en el frente reporta el número de
+símbolos distintos (k) en cada ronda. Si k > 1, se imprime "i j" (rotar la
+rueda i en j posiciones; j negativo = sentido contrario). Si k = 1 (jackpot)
+el programa termina. Reglas: 3 ≤ n ≤ 50; |j| ≤ 10^9; máximo 10.000 acciones;
+el juez NO es adversario (configuración inicial fija); el estado inicial no es
+una ganadora.
+
+ESTADO ACTUAL DEL REPOSITORIO (observado)
+-----------------------------------------
+- Archivos PDF de ciclos 1–4 presentes (!DOPO-I01..I04).
+- Asta de ciclo 1 ("Ciclo 1.asta"), ciclo 2 ("SlotMachine ciclo 2.asta") y ciclo
+  3 ("SlotMachine ciclo 3.asta") disponibles en astah.
+- Carpeta SlotMachine con el código de los ciclos 1–3 y tests (SlotMachineC2Test).
+- retrospectiva.txt existe.
+- Aún no se evidencian entregas del ciclo 4 (no hay SlotMachineC4Test ni astah de
+  ciclo 4 dentro de la carpeta).
